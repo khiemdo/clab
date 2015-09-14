@@ -1,0 +1,1 @@
+build\generator -t collections.cpp list.template T:float

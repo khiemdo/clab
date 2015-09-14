@@ -1,0 +1,91 @@
+
+// Type allocators
+inline void* alloc_Player() { return MALLOC(Player); }
+inline void* alloc_TestStruct() { return MALLOC(TestStruct); }
+
+// Function callers
+inline void call_proc0(void* ret, u8 start, ...) { proc0(); }
+inline void call_select_button(void* ret, u8 start, ...) { select_button(); }
+
+// Type-id bindings
+inline u32 type_id(Player* ptr) { return 0; }
+inline u32 type_id(TestStruct* ptr) { return 1; }
+
+// Global variables [g|s]etters
+inline void* get_result(void* target) { return &result; }
+inline void set_result(void* target, void* value) { result = *(int*)value; }
+inline void* get_global_popup(void* target) { return &global_popup; }
+inline void set_global_popup(void* target, void* value) { global_popup = *(string*)value; }
+
+// Instance fields [g|s]etters
+inline void* get_Player_id(void* target) { return &((Player*)target)->id; }
+inline void set_Player_id(void* target, void* value) { ((Player*)target)->id = *(u32*)value; }
+inline void* get_Player_weapon(void* target) { return &((Player*)target)->weapon; }
+inline void set_Player_weapon(void* target, void* value) { ((Player*)target)->weapon = *(u32*)value; }
+inline void* get_Player_health(void* target) { return &((Player*)target)->health; }
+inline void set_Player_health(void* target, void* value) { ((Player*)target)->health = *(float*)value; }
+inline void* get_TestStruct_message(void* target) { return &((TestStruct*)target)->message; }
+inline void set_TestStruct_message(void* target, void* value) { ((TestStruct*)target)->message = *(string*)value; }
+
+// Meta-data initialization
+void meta_init()
+{
+	metatypes.names[0] = "Player";
+	metatypes.fields[0].types[0] = "u32";
+	metatypes.fields[0].names[0] = "id";
+	metatypes.fields[0].gets[0] = get_Player_id;
+	metatypes.fields[0].sets[0] = set_Player_id;
+	metatypes.fields[0].types[1] = "u32";
+	metatypes.fields[0].names[1] = "weapon";
+	metatypes.fields[0].gets[1] = get_Player_weapon;
+	metatypes.fields[0].sets[1] = set_Player_weapon;
+	metatypes.fields[0].types[2] = "float";
+	metatypes.fields[0].names[2] = "health";
+	metatypes.fields[0].gets[2] = get_Player_health;
+	metatypes.fields[0].sets[2] = set_Player_health;
+	metatypes.fields[0].count = 3;
+	metatypes.allocs[0] = alloc_Player;
+	metatypes.names[1] = "TestStruct";
+	metatypes.fields[1].types[0] = "string";
+	metatypes.fields[1].names[0] = "message";
+	metatypes.fields[1].gets[0] = get_TestStruct_message;
+	metatypes.fields[1].sets[0] = set_TestStruct_message;
+	metatypes.fields[1].count = 1;
+	metatypes.allocs[1] = alloc_TestStruct;
+	metatypes.notes[1].count = 1;
+	metatypes.notes[1].names[0] = "serializable";
+	metatypes.notes[1].params[0].add("custom", true);
+	metatypes.count = 2;
+
+	metafuncs.types[0] = "void";
+	metafuncs.names[0] = "proc0";
+	metafuncs.params[0].count = 0;
+	metafuncs.calls[0] = call_proc0;
+	metafuncs.types[1] = "void";
+	metafuncs.names[1] = "select_button";
+	metafuncs.params[1].count = 0;
+	metafuncs.calls[1] = call_select_button;
+	metafuncs.notes[1].count = 1;
+	metafuncs.notes[1].names[0] = "button";
+	metafuncs.notes[1].params[0].add("text", "Select");
+	metafuncs.count = 2;
+
+	metafields.names[0] = "result";
+	metafields.types[0] = "int";
+	metafields.gets[0] = get_result;
+	metafields.sets[0] = set_result;
+	metafields.names[1] = "global_popup";
+	metafields.types[1] = "string";
+	metafields.gets[1] = get_global_popup;
+	metafields.sets[1] = set_global_popup;
+	metafields.notes[1].count = 2;
+	metafields.notes[1].names[0] = "helpbox";
+	metafields.notes[1].params[0].add("text", "meta message...");
+	metafields.notes[1].params[1].add("comment", true);
+	metafields.notes[1].names[1] = "popup";
+	metafields.notes[1].params[0].add("from", "getvalues");
+	metafields.count = 2;
+
+}
+#undef META_INIT
+#define META_INIT() meta_init()

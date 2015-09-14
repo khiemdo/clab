@@ -1,0 +1,23 @@
+struct Array_$T
+{
+    $T*   buffer; 
+    u32  count; 
+
+    Array_$T($T* initvalue, u32 initcount)
+    {
+        buffer = initvalue; 
+        count = initcount; 
+    }
+
+    Array_$T(u32 initcount)
+    {
+        buffer = CALLOC($T, initcount); 
+        count = initcount; 
+    }
+
+    $T& operator [] (u32 index)
+    {
+        return buffer[index]; 
+    }
+};
+
