@@ -1,12 +1,12 @@
 struct Array_$T
 {
     $T*   buffer; 
-    u32  count; 
+    u32  Count; 
 
     Array_$T($T* initvalue, u32 initcount)
     {
         buffer = initvalue; 
-        count = initcount; 
+        Count = initcount; 
     }
 
     Array_$T(u32 initcount)

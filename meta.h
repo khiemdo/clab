@@ -1,4 +1,3 @@
-
 #define N_TYPES 64
 #define N_FUNCS 128
 #define N_FIELDS 32
@@ -7,127 +6,154 @@
 #define N_NOTES 32
 #define meta(...)
 
-#define META_ID(container, value) LINEAR_SEARCH(string, container.names, container.count, value, cmp_string)
-#define META_TYPE_ID(name) META_ID(metatypes, name)
-#define META_ALLOC(T) metatypes.allocs[META_ID(metatypes, T)]()
-#define META_CALL(name, ret, ...) metafuncs.calls[META_ID(metafuncs, name)](ret, 0, __VA_ARGS__)
-#define META_SET_GLOBAL(name, value) metafields.sets[META_ID(metafields, name)](null, value)
-#define META_GET_GLOBAL(name, T) (*(T*)metafields.gets[META_ID(metafields, name)](null))
-#define META_SET_MEMBER(target, name, value) metatypes.fields[type_id(target)].sets[META_ID(metatypes.fields[type_id(target)], name)](target, value)
-#define META_GET_MEMBER(target, name) metatypes.fields[type_id(target)].gets[META_ID(metatypes.fields[type_id(target)], name)](target)
+#define MetaId(Container, Value) STRING_SEARCH(Container.Names, Container.Count, Value)
+#define MetaTypeId(Name) MetaId(MetaTypes, Name)
+#define MetaAlloc(T) MetaTypes.Allocs[MetaId(MetaTypes, T)]()
+#define MetaCall(Name, ret, ...) MetaFuncs.Calls[MetaId(MetaFuncs, Name)](ret, 0, __VA_ARGS__)
+#define MetaSetGlobal(Name, Value) MetaTypes.Fields[0].Setters[MetaId(MetaTypes.Fields[0], Name)](null, Value)
+#define MetaGetGlobal(Name, T) *(T*)MetaTypes.fields[0].Getters[MetaId(MetaTypes.Fields[0], Name)](null)
 
-typedef void  (*mt_call)(void* ret, u8 start, ...);
-typedef void* (*mt_alloc)();
-typedef void  (*mt_set)(void* target, void* value);
-typedef void* (*mt_get)(void* target);
+#define MetaSetMember(Target, Name, Value)\
+    MetaTypes.Fields[TypeId(Target)].Setters[MetaId(MetaTypes.Fields[TypeId(Target)], Name)](Target, Value)
+#define MetaGetMember(Target, Name)\
+    MetaTypes.Fields[TypeId(Target)].Getters[MetaId(MetaTypes.Fields[TypeId(Target)], Name)](Target)
 
-union mt_note_value
+typedef void  (*meta_call)(void* ret, ...);
+typedef void* (*meta_alloc)();
+typedef void  (*meta_set)(void* Target, void* Value);
+typedef void* (*meta_get)(void* Target);
+
+enum { INT, FLOAT, BOOL, STRING };
+
+struct meta_note_value
 {
     float f;
     string s;
+    u32 type;
 
-    mt_note_value(const float& value)  { f = value; }
-    mt_note_value(const int& value)    { f = (float)value; }
-    mt_note_value(const bool& value)   { f = value; }
-    mt_note_value(const string& value) { s = value; }
-    mt_note_value()                    { f = 0;     }
+    meta_note_value(const float& Value)
+    {
+        f = Value;
+        type = FLOAT;
+        s = SALLOC(32);
+        _snprintf(s, 32, "%f", Value);
+    }
+
+    meta_note_value(const int& Value)   
+    {
+        f = (float)Value;
+        type = INT;
+        s = SALLOC(32);
+        sprintf(s, "%d", Value);
+    }
+
+    meta_note_value(const bool& Value)  
+    {
+        f = Value;
+        type = BOOL;
+        s = Value ? "true" : "false";
+    }
+
+    meta_note_value(const string& Value)
+    {
+        s = Value;
+        type = STRING;
+    }
+
+    meta_note_value()                   
+    {
+        f = 0;
+        type = INT;
+    }
 
     operator float()  { return f; }
     operator string() { return s; }
     operator int()    { return (int)f; }
     operator bool()   { return (int)f & 1; } // & 1 to hide warning
 
-    // weird C++ syntax to indicate that this is a postfix and not prefix
-    mt_note_value& operator ++ (int) { f++; return *this; }
-    mt_note_value& operator ++ () { f++; return *this; }
-
-    mt_note_value& operator += (float value) { f += value; return *this; }
-    mt_note_value& operator += (int value) { f += value; return *this; }
-
-    bool operator < (float value) { return f < value; }
-    bool operator < (int   value) { return f < value; }
-    bool operator > (float value) { return f > value; }
-    bool operator > (int   value) { return f > value; }
-
-    mt_note_value& operator + (const mt_note_value& other) { f += other.f; return *this; }
-    mt_note_value& operator - (const mt_note_value& other) { f -= other.f; return *this; }
+    bool operator < (float Value) { return f < Value; }
+    bool operator < (int   Value) { return f < Value; }
+    bool operator > (float Value) { return f > Value; }
+    bool operator > (int   Value) { return f > Value; }
+    bool operator == (string Value) { return streql(s, Value); }
+    // etc...
 };
 
-struct mt_note_params
+static meta_note_value InvalidNoteValue = -1;
+
+struct meta_note_params
 {
-    string         keys[N_NOTE_ARGS];
-    mt_note_value  values[N_NOTE_ARGS];
-    u32            count;
+    string          Keys[N_NOTE_ARGS];
+    meta_note_value Values[N_NOTE_ARGS];
+    u32             Count;
 
-    static mt_note_value invalid; // TODO assign to -1
-
-    void add(string key, mt_note_value value)
+    void Add(string Key, meta_note_value Value)
     {
-        assert(count < N_NOTE_ARGS);
-        keys[count] = key;
-        values[count++] = value;
+        Assert(Count < N_NOTE_ARGS);
+        Keys[Count] = Key;
+        Values[Count++] = Value;
     }
 
-    mt_note_value& operator () (u32 idx)
+    meta_note_value& operator () (u32 Index)
     {
-        assert(idx < count);
-        return values[idx];
+        Assert(Index < Count);
+        return Values[Index];
     }
 
-    mt_note_value& operator () (string key, mt_note_value& default)
+    meta_note_value& operator () (string Key, meta_note_value& Default)
     {
-        return value_or_default(key, default);
+        return ValueOrDefault(Key, Default);
     }
 
-    mt_note_value& operator () (string key)
+    meta_note_value& operator () (string Key)
     {
-        return value_or_default(key, invalid);
+        return ValueOrDefault(Key, InvalidNoteValue);
     }
 
-    mt_note_value& value_or_default(string key, mt_note_value& default)
+    meta_note_value& ValueOrDefault(string Key, meta_note_value& Default)
     {
-        s32 i = STRING_SEARCH(keys, count, key);
+        s32 i = STRING_SEARCH(Keys, Count, Key);
         if (i == -1)
-            return default;
-        return values[i];
+            return Default;
+        return Values[i];
     }
 };
 
-struct mt_notes
+struct meta_notes
 {
-    u32              count;
-    string           names[N_NOTES];
-    mt_note_params   params[N_NOTES];
+    u32                Count;
+    string             Names[N_NOTES];
+    meta_note_params   Params[N_NOTES];
 };
 
-struct mt_fields
+struct meta_fields
 {
-    u32       count;
-    string    types[N_FIELDS];
-    string    names[N_FIELDS];
-    mt_notes  notes[N_FIELDS];
-    mt_set    sets[N_FIELDS];
-    mt_get    gets[N_FIELDS];
-} metafields;
+    u32         Count;
+    string      Types[N_FIELDS];
+    string      Names[N_FIELDS];
+    meta_notes  Notes[N_FIELDS];
+    meta_set    Setters[N_FIELDS];
+    meta_get    Getters[N_FIELDS];
+};
 
-struct mt_funcs
+struct meta_funcs
 {
-    u32        count;
-    string     types[N_FUNCS];
-    string     names[N_FUNCS];
-    mt_notes   notes[N_FUNCS];
-    mt_fields  params[N_FUNCS];
-    mt_call    calls[N_FUNCS];
-} metafuncs;
+    u32          Count;
+    string       Types[N_FUNCS];
+    string       Names[N_FUNCS];
+    meta_notes   Notes[N_FUNCS];
+    meta_fields  Params[N_FUNCS];
+    meta_call    Calls[N_FUNCS];
+} MetaFuncs;
 
-struct mt_types // SOA struct of array, AOS Array of struct
+struct meta_types // SOA struct of array, AOS Array of struct
 {
-    u32        count;
-    string     names[N_TYPES];
-    mt_notes   notes[N_TYPES];
-    mt_fields  fields[N_TYPES];
-    mt_alloc   allocs[N_TYPES];
-} metatypes;
+    u32          Count;
+    string       Names[N_TYPES];
+    meta_notes   Notes[N_TYPES];
+    meta_fields  Fields[N_TYPES];
+    meta_alloc   Allocs[N_TYPES];
+} MetaTypes;
 
 // to be redefined in the generated meta to point to the meta initialization function
 #define META_INIT()

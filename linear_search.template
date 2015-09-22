@@ -1,8 +1,8 @@
 
-int LINEAR_SEARCH_$T($T* array, u32 count, $T value, s32(*cmp)($T, $T))
+int LINEAR_SEARCH_$T($T* array, u32 Count, $T Value, s32(*cmp)($T, $T))
 {
-    for (u32 i = 0; i < count; i++)
-        if (cmp((array)[i], value) == 0)
+    for (u32 i = 0; i < Count; i++)
+        if (cmp((array)[i], Value) == 0)
             return i;
     return -1;
 }

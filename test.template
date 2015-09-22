@@ -1,0 +1,2 @@
+
+struct Vector3 { $X x; $Y y; $Z z; };

@@ -1,90 +1,124 @@
 
 // Type allocators
-inline void* alloc_Player() { return MALLOC(Player); }
-inline void* alloc_TestStruct() { return MALLOC(TestStruct); }
+inline void* alloc_Player() { return CALLOC(Player, 1); }
+inline void* alloc_TestStruct() { return CALLOC(TestStruct, 1); }
 
 // Function callers
-inline void call_proc0(void* ret, u8 start, ...) { proc0(); }
-inline void call_select_button(void* ret, u8 start, ...) { select_button(); }
+inline void call_proc0(void* ret, ...) { proc0(); }
+inline void call_sum(void* ret, ...)
+{
+	va_begin(ret);
+	int x = va_arg(args, int);
+	int y = va_arg(args, int);
+	*(int*)ret = sum(x, y);
+	va_end(args);
+}
+inline void call_proc1(void* ret, ...)
+{
+	va_begin(ret);
+	int* ptr0 = va_arg(args, int*);
+	float** ptr1 = va_arg(args, float**);
+	double* ptr2 = va_arg(args, double*);
+	proc1(ptr0, ptr1, ptr2);
+	va_end(args);
+}
 
 // Type-id bindings
-inline u32 type_id(Player* ptr) { return 0; }
-inline u32 type_id(TestStruct* ptr) { return 1; }
+inline u32 TypeId(Player* ptr) { return 1; }
+inline u32 TypeId(TestStruct* ptr) { return 2; }
 
 // Global variables [g|s]etters
-inline void* get_result(void* target) { return &result; }
-inline void set_result(void* target, void* value) { result = *(int*)value; }
-inline void* get_global_popup(void* target) { return &global_popup; }
-inline void set_global_popup(void* target, void* value) { global_popup = *(string*)value; }
+inline void* get_result(void* Target) { return &result; }
+inline void set_result(void* Target, void* Value) { result = *(int*)Value; }
 
-// Instance fields [g|s]etters
-inline void* get_Player_id(void* target) { return &((Player*)target)->id; }
-inline void set_Player_id(void* target, void* value) { ((Player*)target)->id = *(u32*)value; }
-inline void* get_Player_weapon(void* target) { return &((Player*)target)->weapon; }
-inline void set_Player_weapon(void* target, void* value) { ((Player*)target)->weapon = *(u32*)value; }
-inline void* get_Player_health(void* target) { return &((Player*)target)->health; }
-inline void set_Player_health(void* target, void* value) { ((Player*)target)->health = *(float*)value; }
-inline void* get_TestStruct_message(void* target) { return &((TestStruct*)target)->message; }
-inline void set_TestStruct_message(void* target, void* value) { ((TestStruct*)target)->message = *(string*)value; }
+// Instance Fields [g|s]etters
+inline void* get_Player_health(void* Target) { return &((Player*)Target)->health; }
+inline void set_Player_health(void* Target, void* Value) { ((Player*)Target)->health = *(float*)Value; }
+inline void* get_Player_speed(void* Target) { return &((Player*)Target)->speed; }
+inline void set_Player_speed(void* Target, void* Value) { ((Player*)Target)->speed = *(float*)Value; }
+inline void* get_Player_mesh(void* Target) { return &((Player*)Target)->mesh; }
+inline void set_Player_mesh(void* Target, void* Value) { ((Player*)Target)->mesh = (Verticies*)Value; }
+inline void* get_Player_model(void* Target) { return &((Player*)Target)->model; }
+inline void set_Player_model(void* Target, void* Value) { ((Player*)Target)->model = (Verticies*)Value; }
+inline void* get_Player_inventory(void* Target) { return &((Player*)Target)->inventory; }
+inline void set_Player_inventory(void* Target, void* Value) { ((Player*)Target)->inventory = (Inventory*)Value; }
+inline void* get_TestStruct_message(void* Target) { return &((TestStruct*)Target)->message; }
+inline void set_TestStruct_message(void* Target, void* Value) { ((TestStruct*)Target)->message = *(string*)Value; }
 
 // Meta-data initialization
 void meta_init()
 {
-	metatypes.names[0] = "Player";
-	metatypes.fields[0].types[0] = "u32";
-	metatypes.fields[0].names[0] = "id";
-	metatypes.fields[0].gets[0] = get_Player_id;
-	metatypes.fields[0].sets[0] = set_Player_id;
-	metatypes.fields[0].types[1] = "u32";
-	metatypes.fields[0].names[1] = "weapon";
-	metatypes.fields[0].gets[1] = get_Player_weapon;
-	metatypes.fields[0].sets[1] = set_Player_weapon;
-	metatypes.fields[0].types[2] = "float";
-	metatypes.fields[0].names[2] = "health";
-	metatypes.fields[0].gets[2] = get_Player_health;
-	metatypes.fields[0].sets[2] = set_Player_health;
-	metatypes.fields[0].count = 3;
-	metatypes.allocs[0] = alloc_Player;
-	metatypes.names[1] = "TestStruct";
-	metatypes.fields[1].types[0] = "string";
-	metatypes.fields[1].names[0] = "message";
-	metatypes.fields[1].gets[0] = get_TestStruct_message;
-	metatypes.fields[1].sets[0] = set_TestStruct_message;
-	metatypes.fields[1].count = 1;
-	metatypes.allocs[1] = alloc_TestStruct;
-	metatypes.notes[1].count = 1;
-	metatypes.notes[1].names[0] = "serializable";
-	metatypes.notes[1].params[0].add("custom", true);
-	metatypes.count = 2;
+	MetaTypes.Names[1] = "Player";
+	MetaTypes.Fields[1].Types[0] = "float";
+	MetaTypes.Fields[1].Names[0] = "health";
+	MetaTypes.Fields[1].Getters[0] = get_Player_health;
+	MetaTypes.Fields[1].Setters[0] = set_Player_health;
+	MetaTypes.Fields[1].Types[0] = "float";
+	MetaTypes.Fields[1].Names[0] = "speed";
+	MetaTypes.Fields[1].Getters[0] = get_Player_speed;
+	MetaTypes.Fields[1].Setters[0] = set_Player_speed;
+	MetaTypes.Fields[1].Types[0] = "Verticies*";
+	MetaTypes.Fields[1].Names[0] = "mesh";
+	MetaTypes.Fields[1].Getters[0] = get_Player_mesh;
+	MetaTypes.Fields[1].Setters[0] = set_Player_mesh;
+	MetaTypes.Fields[1].Types[1] = "Verticies*";
+	MetaTypes.Fields[1].Names[1] = "model";
+	MetaTypes.Fields[1].Getters[1] = get_Player_model;
+	MetaTypes.Fields[1].Setters[1] = set_Player_model;
+	MetaTypes.Fields[1].Types[0] = "Inventory*";
+	MetaTypes.Fields[1].Names[0] = "inventory";
+	MetaTypes.Fields[1].Getters[0] = get_Player_inventory;
+	MetaTypes.Fields[1].Setters[0] = set_Player_inventory;
+	MetaTypes.Fields[1].Count = 5;
+	MetaTypes.Allocs[1] = alloc_Player;
+	MetaTypes.Fields[0].Types[0] = "int";
+	MetaTypes.Fields[0].Names[0] = "result";
+	MetaTypes.Fields[0].Getters[0] = get_result;
+	MetaTypes.Fields[0].Setters[0] = set_result;
+	MetaTypes.Names[2] = "TestStruct";
+	MetaTypes.Fields[2].Types[0] = "string";
+	MetaTypes.Fields[2].Names[0] = "message";
+	MetaTypes.Fields[2].Getters[0] = get_TestStruct_message;
+	MetaTypes.Fields[2].Setters[0] = set_TestStruct_message;
+	MetaTypes.Fields[2].Notes[0].Count = 2;
+	MetaTypes.Fields[2].Notes[0].Names[0] = "helpbox";
+	MetaTypes.Fields[2].Notes[0].Params[0].Add("text", "meta message...");
+	MetaTypes.Fields[2].Notes[0].Params[0].Add("comment", true);
+	MetaTypes.Fields[2].Notes[0].Names[1] = "popup";
+	MetaTypes.Fields[2].Notes[0].Params[1].Add("from", "getvalues");
+	MetaTypes.Fields[2].Notes[0].Params[1].Add("value", 3.14f);
+	MetaTypes.Fields[2].Count = 1;
+	MetaTypes.Allocs[2] = alloc_TestStruct;
+	MetaTypes.Notes[2].Count = 1;
+	MetaTypes.Notes[2].Names[0] = "serializable";
+	MetaTypes.Notes[2].Params[0].Add("custom", true);
+	MetaTypes.Names[0] = "_GLOBAL_";
+	MetaTypes.Fields[0].Count = 1;
+	MetaTypes.Count = 3;
 
-	metafuncs.types[0] = "void";
-	metafuncs.names[0] = "proc0";
-	metafuncs.params[0].count = 0;
-	metafuncs.calls[0] = call_proc0;
-	metafuncs.types[1] = "void";
-	metafuncs.names[1] = "select_button";
-	metafuncs.params[1].count = 0;
-	metafuncs.calls[1] = call_select_button;
-	metafuncs.notes[1].count = 1;
-	metafuncs.notes[1].names[0] = "button";
-	metafuncs.notes[1].params[0].add("text", "Select");
-	metafuncs.count = 2;
-
-	metafields.names[0] = "result";
-	metafields.types[0] = "int";
-	metafields.gets[0] = get_result;
-	metafields.sets[0] = set_result;
-	metafields.names[1] = "global_popup";
-	metafields.types[1] = "string";
-	metafields.gets[1] = get_global_popup;
-	metafields.sets[1] = set_global_popup;
-	metafields.notes[1].count = 2;
-	metafields.notes[1].names[0] = "helpbox";
-	metafields.notes[1].params[0].add("text", "meta message...");
-	metafields.notes[1].params[1].add("comment", true);
-	metafields.notes[1].names[1] = "popup";
-	metafields.notes[1].params[0].add("from", "getvalues");
-	metafields.count = 2;
+	MetaFuncs.Types[0] = "void";
+	MetaFuncs.Names[0] = "proc0";
+	MetaFuncs.Params[0].Count = 0;
+	MetaFuncs.Calls[0] = call_proc0;
+	MetaFuncs.Types[1] = "int";
+	MetaFuncs.Names[1] = "sum";
+	MetaFuncs.Params[1].Types[2] = "int";
+	MetaFuncs.Params[1].Names[2] = "x";
+	MetaFuncs.Params[1].Types[2] = "int";
+	MetaFuncs.Params[1].Names[2] = "y";
+	MetaFuncs.Calls[1] = call_sum;
+	MetaFuncs.Params[1].Count = 2;
+	MetaFuncs.Types[2] = "void";
+	MetaFuncs.Names[2] = "proc1";
+	MetaFuncs.Params[2].Types[3] = "int*";
+	MetaFuncs.Params[2].Names[3] = "ptr0";
+	MetaFuncs.Params[2].Types[3] = "float**";
+	MetaFuncs.Params[2].Names[3] = "ptr1";
+	MetaFuncs.Params[2].Types[3] = "double*";
+	MetaFuncs.Params[2].Names[3] = "ptr2";
+	MetaFuncs.Calls[2] = call_proc1;
+	MetaFuncs.Params[2].Count = 3;
+	MetaFuncs.Count = 3;
 
 }
 #undef META_INIT

@@ -3,8 +3,8 @@ struct DICT
 
     struct node
     {
-        string key;
-        int  value;
+        string Key;
+        int  Value;
         node* next;
     };
 
@@ -50,38 +50,38 @@ struct DICT
         };
     }
 
-    u32 computehash(string key)
+    u32 computehash(string Key)
     {
         u32 hash;
-        for (hash = 0; *key != '\0'; key++)
-            hash = *key + 31 * hash;
+        for (hash = 0; *Key != '\0'; Key++)
+            hash = *Key + 31 * hash;
         return hash % capacity;
     }
 
-    node* find(string key, u32& hash)
+    node* find(string Key, u32& hash)
     {
-        hash = computehash(key);
+        hash = computehash(Key);
         for (node* e = table[hash];
                 e != null;
                 e = e->next)
         {
-            if (cmpkey(e->key, key) == 0)
+            if (cmpkey(e->Key, Key) == 0)
                 return e;
         }
         return null;
     }
 
-    void add(string key, int value)
+    void add(string Key, int Value)
     {
-        // try to find the node at the specified key if it
+        // try to find the node at the specified Key if it
         // doesn't exist we allocate a new node with the
-        // specified key and value otherwise we clear the
-        // previously existing value and assign it the new one
+        // specified Key and Value otherwise we clear the
+        // previously existing Value and assign it the new one
         u32 hash;
-        node* e = find(key, hash);
+        node* e = find(Key, hash);
         if (e)
         {
-            if (clrfun) clrfun(&e->value);
+            if (clrfun) clrfun(&e->Value);
         }
         else
         {
@@ -101,7 +101,7 @@ struct DICT
                     while (it)
                     {
                         node* next = it->next;
-                        u32 newhash = computehash(it->key);
+                        u32 newhash = computehash(it->Key);
                         if (newtable[newhash] == null)
                             newtable[newhash] = it;
                         else
@@ -119,25 +119,25 @@ struct DICT
                 table = newtable;
 
                 // recompute hash since we resized
-                hash = computehash(key);
+                hash = computehash(Key);
             }
 
             e = MALLOC(node);
-            e->key = key;
+            e->Key = Key;
             e->next = table[hash]; // point to the head
             table[hash] = e; // this node is now the new head
             count++;
         }
 
-        e->value = value;
+        e->Value = Value;
     }
 
-    int operator [](string key)
+    int operator [](string Key)
     {
         u32 hash;
-        node* e = find(key, hash);
+        node* e = find(Key, hash);
         if (!e) return -1;
-        return e->value;
+        return e->Value;
     }
 };
 
@@ -150,12 +150,12 @@ struct LINQ
 
     void**     selbuf;
     void**     mainbuf;
-    u32        count;
+    u32        Count;
     cmpfun_t   linqcmp;
 
     LINQ* from(void** buf, u32 cnt, cmpfun_t cmp)
     {
-        count = cnt;
+        Count = cnt;
         mainbuf = buf;
         linqcmp = cmp;
         return this;
@@ -163,14 +163,14 @@ struct LINQ
 
     void select(void* (*xform)(void*))
     {
-        selbuf = RALLOC(selbuf, void*, count);
-        FOR(count)
+        selbuf = RALLOC(selbuf, void*, Count);
+        FOR(Count)
             selbuf[i] = xform(mainbuf[i]);
     }
 
     LINQ* where(bool(*predicate)(void*))
     {
-        u32 cmpidx = count - 1;
+        u32 cmpidx = Count - 1;
         for (u32 i = 0;;)
         {
             void* it = mainbuf[i];
@@ -182,7 +182,7 @@ struct LINQ
             {
                 SWAP(void*, mainbuf[i], mainbuf[cmpidx]);
                 cmpidx--;
-                count--;
+                Count--;
             }
             if (cmpidx < i)
                 break;
@@ -194,7 +194,7 @@ struct LINQ
     {
         // in:  1, 2, 1, 1, 3, 2
         // out: 1, 2, 3 (in any order)
-        for (u32 i = 0, nextplace = 0, cnt = count, skip; i < cnt; i++)
+        for (u32 i = 0, nextplace = 0, cnt = Count, skip; i < cnt; i++)
         {
             skip = 0;
             void* it = mainbuf[i];
@@ -217,9 +217,9 @@ struct LINQ
 
     LINQ* take(u32 n)
     {
-        if (n > count)
-            n = count;
-        count = n;
+        if (n > Count)
+            n = Count;
+        Count = n;
         return this;
     }
 
@@ -227,13 +227,13 @@ struct LINQ
     {
         // 1, 2, 3, 4, 5
         // 3, 4, 5, 1, 2
-        u32 swapidx = count - n;
+        u32 swapidx = Count - n;
         FOR(n)
         {
             SWAP(void*, mainbuf[i], mainbuf[swapidx]);
             swapidx++;
         }
-        count -= n;
+        Count -= n;
         return this;
     }
 
@@ -255,7 +255,7 @@ struct LINQ
         // 1, 2, 3, 4
         // 4, 3, 2, 1
 
-        for (u32 left = 0, right = count - 1;
+        for (u32 left = 0, right = Count - 1;
                 left < right;
                 left++, right--)
             SWAP(void*, mainbuf[left], mainbuf[right]);
@@ -289,7 +289,7 @@ struct memtable_
 
     void map(void* address, u32 size)
     {
-        assert(count < TABLE_SIZE);
+        Assert(count < TABLE_SIZE);
         pointers[count] = address;
         sizes[count++] = size;
     }

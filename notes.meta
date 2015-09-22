@@ -1,0 +1,4 @@
+
+helpbox = text, comment;
+popup = from, value;
+serializable = custom;

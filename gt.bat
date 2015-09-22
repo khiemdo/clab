@@ -1,1 +1,1 @@
-build\generator -t collections.cpp list.template T:float
+build\generator -m meta.gen Test0.cpp Test1.cpp

@@ -1,6 +1,6 @@
 struct List_$T
 {
-    u32     count; 
+    u32     Count; 
     u32     capacity; 
     $T*     buffer; 
     void    (*clrfun)($T* element); 
@@ -10,7 +10,7 @@ struct List_$T
             void(*clrfun)($T*) = null, 
             s32(*cmpfun)($T, $T) = null)
     {
-        this->count = 0; 
+        this->Count = 0; 
         this->capacity = capacity; 
         this->buffer = CALLOC($T, capacity); 
         this->clrfun = clrfun; 
@@ -19,13 +19,13 @@ struct List_$T
     
     bool empty()
     {
-        return count == 0; 
+        return Count == 0; 
     }
     
     $T pop()
     {
         $T ret = last(); 
-        removeat(count - 1); 
+        removeat(Count - 1); 
         return ret; 
     }
     
@@ -43,7 +43,7 @@ struct List_$T
     
     $T last()
     {
-        return buffer[count - 1]; 
+        return buffer[Count - 1]; 
     }
     
     void destroy()
@@ -51,35 +51,35 @@ struct List_$T
         free(buffer); 
     }
     
-    void add($T value)
+    void add($T Value)
     {
-        if (count >= capacity)
+        if (Count >= capacity)
         {
             capacity <<= 1; 
             buffer = RALLOC(buffer, $T, capacity); 
         }
-        buffer[count++] = value; 
+        buffer[Count++] = Value; 
     }
     
     void removeat(u32 index)
     {
-        for (u32 i = index, cnt = count - index - 1; cnt > 0; i++, cnt--)
+        for (u32 i = index, cnt = Count - index - 1; cnt > 0; i++, cnt--)
         buffer[i] = buffer[i + 1]; 
-        if (clrfun) clrfun(&buffer[count - 1]); 
-        count--; 
+        if (clrfun) clrfun(&buffer[Count - 1]); 
+        Count--; 
     }
     
-    s32 find($T value)
+    s32 find($T Value)
     {
-        FOR(count)
-            if (cmpfun(buffer[i], value))
+        FOR(Count)
+            if (cmpfun(buffer[i], Value))
                 return i;
         return -1;
     }
     
-    void remove($T value)
+    void remove($T Value)
     {
-        s32 index = find(value); 
+        s32 index = find(Value); 
         if (index == -1)
         return; 
         removeat(index); 
@@ -88,9 +88,9 @@ struct List_$T
     void clear()
     {
         if (clrfun)
-        FOR(count)
+        FOR(Count)
         clrfun(&buffer[i]); 
-        count = 0; 
+        Count = 0; 
     }
     
     $T& at(u32 index)
